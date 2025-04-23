@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External Tracking Script Manager</title>
+    <!-- Include Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+        }
+
+        /* Main container */
+        .tracking-script-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            background: #fff;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        .tabs ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 0;
+        }
+
+        .tabs li {
+            margin: 0;
+        }
+
+        .tabs a {
+            display: block;
+            padding: 15px 30px;
+            text-decoration: none;
+            color: #586069;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tabs a:hover {
+            color: #0366d6;
+            background: #f6f8fa;
+        }
+
+        .tabs a.active {
+            color: #0366d6;
+            border-bottom-color: #0366d6;
+            background: #f6f8fa;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Code Box */
+        .code-box {
+            background: #f6f8fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .code-box pre {
+            margin: 0;
+            padding: 15px;
+            overflow-x: auto;
+            background: #2d333b;
+            color: #adbac7;
+            border-radius: 6px;
+        }
+
+        /* Buttons */
+        button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d1d5da;
+            background: white;
+            color: #24292e;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #f3f4f6;
+        }
+
+        button.primary {
+            background: #2ea44f;
+            color: white;
+            border: none;
+        }
+
+        button.primary:hover {
+            background: #2c974b;
+        }
+
+        /* Input Groups */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="number"],
+        select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            flex: 1;
+        }
+
+        /* Events Section */
+        .event-list {
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eaecef;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Field Mapping */
+        .mapping-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .field-list {
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .field-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            cursor: move;
+        }
+
+        .dropzone {
+            border: 2px dashed #d1d5da;
+            background: #f6f8fa;
+            min-height: 50px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+
+        /* Analytics */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .analytics-card {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 15px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .tracking-script-container {
+                margin: 10px;
+            }
+
+            .tabs a {
+                padding: 10px 15px;
+            }
+
+            .mapping-container {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Additional styles for updated UI */
+        .trigger-section {
+            padding: 24px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .trigger-type-selector {
+            margin: 15px 0;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .trigger-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .trigger-option.selected {
+            background: #f1f8ff;
+            border-left: 3px solid #0366d6;
+        }
+
+        .trigger-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .checkbox-group, .radio-group {
+            margin: 16px 0;
+        }
+
+        .radio-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 24px;
+            cursor: pointer;
+        }
+
+        .info-icon {
+            color: #6a737d;
+            cursor: help;
+            font-size: 14px;
+            margin-left: 4px;
+        }
+
+        .condition-builder {
+            margin: 16px 0;
+        }
+
+        .condition-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .select-wrapper {
+            position: relative;
+            min-width: 180px;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            background: white;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            font-size: 12px;
+            color: #6a737d;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .condition-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+        }
+
+        .remove-condition {
+            padding: 4px 8px;
+            font-size: 18px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .remove-condition:hover {
+            background: #c82333;
+        }
+
+        .add-condition {
+            padding: 8px 16px;
+            color: #0366d6;
+            background: white;
+            border: 1px solid #0366d6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-condition:hover {
+            background: #f1f8ff;
+        }
+
+        /* Default Events Section */
+        .default-events-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e1e4e8;
+        }
+
+        .default-events-list {
+            margin-top: 16px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .default-event-item {
+            padding: 16px;
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e4e8;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .event-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .event-type {
+            font-weight: 500;
+            color: #24292e;
+        }
+
+        .event-name-input {
+            width: 200px;
+            padding: 4px 8px;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .event-name-input:focus {
+            outline: none;
+            border-color: #0366d6;
+            box-shadow: 0 0 0 2px rgba(3,102,214,0.2);
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #6a737d;
+            margin-left: 8px;
+        }
+
+        .edit-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .event-status {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 12px;
+        }
+
+        .event-status.active {
+            background: #28a745;
+            color: white;
+        }
+
+        .event-description {
+            color: #6a737d;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .condition-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .select-wrapper {
+                width: 100%;
+            }
+
+            .condition-input {
+                width: 100%;
+            }
+        }
+
+        /* Additional styles */
+        .tracked-events-section {
+            margin-bottom: 40px;
+        }
+
+        .event-item {
+            background: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .event-type-selector {
+            margin: 20px 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 24px;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+        }
+
+        .event-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .event-type-card {
+            padding: 20px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .event-type-card:hover {
+            border-color: #0366d6;
+            background: #f1f8ff;
+        }
+
+        .event-type-card img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+        }
+
+        .analytics-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .stat-trend {
+            font-size: 14px;
+        }
+
+        .stat-trend.positive {
+            color: #28a745;
+        }
+
+        .stat-trend.negative {
+            color: #dc3545;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Additional styles for event configuration */
+        .event-config-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .button-config,
+        .sale-config {
+            margin: 16px 0;
+            padding: 16px;
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .identifier-type {
+            margin-bottom: 8px;
+        }
+
+        .edit-btn {
+            padding: 4px 8px;
+            background: #f1f8ff;
+            color: #0366d6;
+            border: 1px solid #0366d6;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background: #0366d6;
+            color: white;
+        }
+
+        /* Additional styles */
+        .event-basics {
+            margin: 16px 0;
+            padding: 16px;
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+        }
+
+        .help-text {
+            display: block;
+            font-size: 12px;
+            color: #6a737d;
+            margin-top: 4px;
+        }
+
+        .mapping-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .mapping-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto;
+            gap: 12px;
+            align-items: center;
+            background: white;
+            padding: 16px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .mapping-arrow {
+            font-size: 20px;
+            color: #6a737d;
+        }
+
+        .field-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tracking-script-container">
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <ul>
+                <li><a href="#tracking-code" class="active">Tracking Code</a></li>
+                <li><a href="#events">Events</a></li>
+                <li><a href="#field-mapping">Field Mapping</a></li>
+                <li><a href="#analytics">Analytics</a></li>
+            </ul>
+        </nav>
+
+        <!-- Tracking Code Tab -->
+        <div id="tracking-code" class="tab-content active">
+            <h2>Tracking Code Installation</h2>
+            <p>Copy and paste this tracking code into every page of your site, just before the closing &lt;/body&gt; tag.</p>
+            
+            <div class="code-box">
+                <pre><code>
+&lt;script&gt;
+(function(w,d,s,l,i){
+    w[l]=w[l]||[];
+    w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
+    var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
+    j.async=true;j.src='https://cdn.example.com/'+i+'.js';
+    f.parentNode.insertBefore(j,f);
+})(window,document,'script','hl','HL-XXXXX');
+&lt;/script&gt;</code></pre>
+                <button class="copy-btn" onclick="copyCode()">Copy Code</button>
+                <button class="email-btn">Email to Developer</button>
+            </div>
+
+            <div class="test-installation">
+                <h3>Test Your Installation</h3>
+                <div class="input-group">
+                    <input type="url" placeholder="Enter your website URL" id="test-url">
+                    <button class="test-btn primary" onclick="testInstallation()">Test Installation</button>
+                </div>
+                <div class="test-results" id="test-results"></div>
+            </div>
+        </div>
+
+        <!-- Events Tab -->
+        <div id="events" class="tab-content">
+            <h2>Event Configuration</h2>
+            
+            <!-- Default Tracked Events Section -->
+            <div class="tracked-events-section">
+                <h3>Default Tracked Events</h3>
+                <div class="tracked-events-list">
+                    <div class="event-item">
+                        <div class="event-header">
+                            <span class="event-name">Page View</span>
+                            <span class="event-status active">Active</span>
+                        </div>
+                        <p class="event-description">Tracks when a user views any page where the script is installed</p>
+                    </div>
+                    <div class="event-item">
+                        <div class="event-header">
+                            <span class="event-name">Scroll Depth</span>
+                            <span class="event-status active">Active</span>
+                        </div>
+                        <p class="event-description">Tracks when users scroll to specific depths (25%, 50%, 75%, 90%)</p>
+                    </div>
+                    <div class="event-item">
+                        <div class="event-header">
+                            <span class="event-name">Click Tracking</span>
+                            <span class="event-status active">Active</span>
+                        </div>
+                        <p class="event-description">Tracks clicks on interactive elements (buttons, links, etc.)</p>
+                    </div>
+                    <div class="event-item">
+                        <div class="event-header">
+                            <span class="event-name">Form Interactions</span>
+                            <span class="event-status active">Active</span>
+                        </div>
+                        <p class="event-description">Tracks form field focus, blur, and input events</p>
+                    </div>
+                    <div class="event-item">
+                        <div class="event-header">
+                            <span class="event-name">Video Engagement</span>
+                            <span class="event-status active">Active</span>
+                        </div>
+                        <p class="event-description">Tracks video play, pause, progress, and completion</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Configuration Template -->
+            <template id="eventConfigTemplate">
+                <div class="event-config-section">
+                    <div class="trigger-scope">
+                        <h4>This trigger fires on</h4>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="formScope_{{id}}" value="all">
+                                <span>All Forms</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="formScope_{{id}}" value="some" checked>
+                                <span>Some Forms</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="trigger-conditions">
+                        <h4>Fire this trigger when an Event occurs and all of these conditions are true</h4>
+                        <div class="condition-builder">
+                            <div class="condition-row">
+                                <div class="select-wrapper">
+                                    <select class="variable-select">
+                                        <option>Page URL</option>
+                                        <option>Form ID</option>
+                                        <option>Button ID</option>
+                                        <option>Click Classes</option>
+                                        <option>Page Hostname</option>
+                                        <option>Page Path</option>
+                                        <option>Referrer</option>
+                                    </select>
+                                </div>
+                                <div class="select-wrapper">
+                                    <select class="operator-select">
+                                        <option>contains</option>
+                                        <option>equals</option>
+                                        <option>matches RegEx</option>
+                                        <option>starts with</option>
+                                        <option>ends with</option>
+                                    </select>
+                                </div>
+                                <input type="text" placeholder="Enter value" class="condition-input">
+                                <button class="remove-condition" title="Remove condition">×</button>
+                            </div>
+                        </div>
+                        <button class="add-condition">+ Add Condition</button>
+                    </div>
+                </div>
+            </template>
+
+            <script>
+                // Function to create event configuration
+                function createEventConfig(type) {
+                    const modal = document.getElementById('eventTypeModal');
+                    modal.style.display = 'none';
+                    
+                    const eventsList = document.getElementById('customEventsList');
+                    const eventDiv = document.createElement('div');
+                    eventDiv.className = 'event-item';
+                    const eventId = Date.now(); // Unique ID for the event
+                    
+                    // Get the template content
+                    const template = document.getElementById('eventConfigTemplate');
+                    let configHTML = template.innerHTML.replace(/{{id}}/g, eventId);
+                    
+                    switch(type) {
+                        case 'form':
+                            eventDiv.innerHTML = `
+                                <div class="event-header">
+                                    <div class="event-title">
+                                        <span class="event-type">Form Submission Event</span>
+                                        <input type="text" class="event-name-input" placeholder="Enter event name" required>
+                                        <span class="help-text">This name will be used to identify the event</span>
+                                    </div>
+                                    <button class="edit-btn">Edit</button>
+                                </div>
+                                ${configHTML}
+                            `;
+                            break;
+                            
+                        case 'button':
+                            eventDiv.innerHTML = `
+                                <div class="event-header">
+                                    <div class="event-title">
+                                        <span class="event-type">Button Click Event</span>
+                                        <input type="text" class="event-name-input" placeholder="Enter event name" required>
+                                        <span class="help-text">This name will be used to identify the event</span>
+                                    </div>
+                                    <button class="edit-btn">Edit</button>
+                                </div>
+                                <div class="button-config">
+                                    <div class="input-group">
+                                        <label>Button Identifier</label>
+                                        <select class="identifier-type">
+                                            <option value="id">Button ID</option>
+                                            <option value="class">CSS Class</option>
+                                            <option value="text">Button Text</option>
+                                        </select>
+                                        <input type="text" placeholder="Enter identifier">
+                                    </div>
+                                </div>
+                                ${configHTML}
+                            `;
+                            break;
+                            
+                        case 'sale':
+                            eventDiv.innerHTML = `
+                                <div class="event-header">
+                                    <div class="event-title">
+                                        <span class="event-type">Sales Tracking Event</span>
+                                        <input type="text" class="event-name-input" placeholder="Enter event name" required>
+                                        <span class="help-text">This name will be used to identify the event</span>
+                                    </div>
+                                    <button class="edit-btn">Edit</button>
+                                </div>
+                                <div class="sale-config">
+                                    <div class="input-group">
+                                        <label>Form ID</label>
+                                        <input type="text" placeholder="Enter form ID">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Price Field</label>
+                                        <input type="text" placeholder="Enter price field ID">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Currency</label>
+                                        <select>
+                                            <option value="USD">USD</option>
+                                            <option value="EUR">EUR</option>
+                                            <option value="GBP">GBP</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                ${configHTML}
+                            `;
+                            break;
+                    }
+                    
+                    eventsList.appendChild(eventDiv);
+                    
+                    // Initialize event handlers for the new configuration
+                    initializeEventHandlers(eventDiv, eventId);
+                }
+
+                // Initialize event handlers for configuration
+                function initializeEventHandlers(eventDiv, eventId) {
+                    // Add condition button
+                    const addConditionBtn = eventDiv.querySelector('.add-condition');
+                    if (addConditionBtn) {
+                        addConditionBtn.addEventListener('click', () => {
+                            const builder = eventDiv.querySelector('.condition-builder');
+                            const newRow = document.createElement('div');
+                            newRow.className = 'condition-row';
+                            newRow.innerHTML = `
+                                <div class="select-wrapper">
+                                    <select class="variable-select">
+                                        <option>Page URL</option>
+                                        <option>Form ID</option>
+                                        <option>Button ID</option>
+                                        <option>Click Classes</option>
+                                        <option>Page Hostname</option>
+                                        <option>Page Path</option>
+                                        <option>Referrer</option>
+                                    </select>
+                                </div>
+                                <div class="select-wrapper">
+                                    <select class="operator-select">
+                                        <option>contains</option>
+                                        <option>equals</option>
+                                        <option>matches RegEx</option>
+                                        <option>starts with</option>
+                                        <option>ends with</option>
+                                    </select>
+                                </div>
+                                <input type="text" placeholder="Enter value" class="condition-input">
+                                <button class="remove-condition" onclick="this.parentElement.remove()" title="Remove condition">×</button>
+                            `;
+                            builder.appendChild(newRow);
+                        });
+                    }
+
+                    // Remove condition buttons
+                    eventDiv.querySelectorAll('.remove-condition').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            this.parentElement.remove();
+                        });
+                    });
+
+                    // Edit button
+                    const editBtn = eventDiv.querySelector('.edit-btn');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', function() {
+                            const configSection = this.closest('.event-item').querySelector('.event-config-section');
+                            if (configSection) {
+                                configSection.style.display = configSection.style.display === 'none' ? 'block' : 'none';
+                            }
+                        });
+                    }
+                }
+
+                // Update the selectEventType function
+                function selectEventType(type) {
+                    createEventConfig(type);
+                }
+            </script>
+
+            <!-- Custom Events Section -->
+            <div class="custom-events-section">
+                <h3>Custom Events</h3>
+                <div class="event-type-selector">
+                    <button class="add-event-btn" onclick="showEventTypeModal()">+ Add Custom Event</button>
+                    
+                    <!-- Event Type Modal -->
+                    <div id="eventTypeModal" class="modal">
+                        <div class="modal-content">
+                            <h4>Select Event Type</h4>
+                            <div class="event-type-grid">
+                                <div class="event-type-card" onclick="selectEventType('form')">
+                                    <img src="form-icon.svg" alt="Form">
+                                    <h5>Form Submission</h5>
+                                    <p>Track form submissions with field data</p>
+                                </div>
+                                <div class="event-type-card" onclick="selectEventType('button')">
+                                    <img src="click-icon.svg" alt="Click">
+                                    <h5>Button Click</h5>
+                                    <p>Track specific button clicks</p>
+                                </div>
+                                <div class="event-type-card" onclick="selectEventType('sale')">
+                                    <img src="sale-icon.svg" alt="Sale">
+                                    <h5>Record Sale</h5>
+                                    <p>Track sales and revenue data</p>
+                                </div>
+                                <div class="event-type-card" onclick="selectEventType('custom')">
+                                    <img src="custom-icon.svg" alt="Custom">
+                                    <h5>Custom Event</h5>
+                                    <p>Define your own event type</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="customEventsList">
+                    <!-- Custom events will be listed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Field Mapping Tab -->
+        <div id="field-mapping" class="tab-content">
+            <h2>Field Mapping Configuration</h2>
+            
+            <div class="event-selector">
+                <label for="eventSelect">Select Event:</label>
+                <select id="eventSelect" onchange="loadEventFields()">
+                    <option value="">Choose an event...</option>
+                    <!-- Event options will be populated dynamically -->
+                </select>
+            </div>
+            
+            <div class="mapping-container" style="display: none;">
+                <div class="mapping-header">
+                    <h3>Map Fields for <span class="selected-event-name"></span></h3>
+                    <button class="add-mapping-btn" onclick="addNewMapping()">+ Add Field Mapping</button>
+                </div>
+
+                <div class="field-mappings">
+                    <!-- Mapping rows will be added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <h2>Analytics Dashboard</h2>
+            
+            <div class="date-filter">
+                <div class="input-group">
+                    <input type="date" class="date-start">
+                    <input type="date" class="date-end">
+                    <button class="apply-filter">Apply</button>
+                </div>
+            </div>
+
+            <div class="analytics-overview">
+                <div class="stat-card">
+                    <h4>Total Page Views</h4>
+                    <div class="stat-value">24,892</div>
+                    <div class="stat-trend positive">↑ 12.3%</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Unique Users</h4>
+                    <div class="stat-value">8,147</div>
+                    <div class="stat-trend positive">↑ 5.7%</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Events</h4>
+                    <div class="stat-value">15,623</div>
+                    <div class="stat-trend negative">↓ 2.1%</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Conversion Rate</h4>
+                    <div class="stat-value">3.8%</div>
+                    <div class="stat-trend positive">↑ 0.5%</div>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="analytics-card full-width">
+                    <h3>Page Views & Events Over Time</h3>
+                    <div class="chart-container">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3>Top Pages</h3>
+                    <div class="chart-container">
+                        <canvas id="topPagesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3>Users by Country</h3>
+                    <div class="chart-container">
+                        <canvas id="countryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3>Device Types</h3>
+                    <div class="chart-container">
+                        <canvas id="deviceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3>Browser Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="browserChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3>Event Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="eventDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tabs a').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tabs a').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.querySelector(tab.getAttribute('href')).classList.add('active');
+            });
+        });
+
+        // Copy code functionality
+        function copyCode() {
+            const code = document.querySelector('.code-box code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            });
+        }
+
+        // Test installation
+        function testInstallation() {
+            const url = document.getElementById('test-url').value;
+            const results = document.getElementById('test-results');
+            
+            if (!url) {
+                results.innerHTML = '<p style="color: red;">Please enter a URL to test</p>';
+                return;
+            }
+
+            results.innerHTML = '<p>Testing installation...</p>';
+            // Implement actual testing logic here
+        }
+
+        // Function to load event fields
+        function loadEventFields() {
+            const eventSelect = document.getElementById('eventSelect');
+            const mappingContainer = document.querySelector('.mapping-container');
+            const selectedEventName = document.querySelector('.selected-event-name');
+            const fieldMappings = document.querySelector('.field-mappings');
+            
+            if (!eventSelect.value) {
+                mappingContainer.style.display = 'none';
+                return;
+            }
+
+            // Show the mapping container
+            mappingContainer.style.display = 'block';
+            selectedEventName.textContent = eventSelect.selectedOptions[0].text;
+            fieldMappings.innerHTML = ''; // Clear existing mappings
+
+            // Add initial mapping row
+            addNewMapping();
+        }
+
+        // Function to add new mapping row
+        function addNewMapping() {
+            const fieldMappings = document.querySelector('.field-mappings');
+            const mappingRow = document.createElement('div');
+            mappingRow.className = 'mapping-row';
+            
+            // Get form fields based on selected event
+            const formFields = getFormFields();
+            
+            mappingRow.innerHTML = `
+                <select class="field-select form-field-select">
+                    <option value="">Select Form Field</option>
+                    ${formFields.map(field => `<option value="${field.value}">${field.label}</option>`).join('')}
+                </select>
+                <span class="mapping-arrow">→</span>
+                <select class="field-select contact-field-select">
+                    <option value="">Select Contact Field</option>
+                    <option value="firstName">First Name</option>
+                    <option value="lastName">Last Name</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                    <option value="company">Company</option>
+                    <option value="address">Address</option>
+                    <option value="city">City</option>
+                    <option value="state">State</option>
+                    <option value="zip">ZIP Code</option>
+                    <option value="country">Country</option>
+                    <option value="custom">Custom Field</option>
+                </select>
+                <button class="remove-mapping" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            fieldMappings.appendChild(mappingRow);
+        }
+
+        // Function to get form fields based on selected event
+        function getFormFields() {
+            const eventSelect = document.getElementById('eventSelect');
+            const eventType = eventSelect.value;
+            
+            // This would typically come from your backend or event configuration
+            // For now, returning sample fields
+            return [
+                { value: 'name', label: 'Name' },
+                { value: 'email', label: 'Email Address' },
+                { value: 'phone', label: 'Phone Number' },
+                { value: 'message', label: 'Message' },
+                { value: 'company', label: 'Company Name' },
+                // Add more fields based on the form type
+            ];
+        }
+
+        // Function to update event select options when new events are created
+        function updateEventSelectOptions() {
+            const eventSelect = document.getElementById('eventSelect');
+            const customEvents = document.querySelectorAll('.event-item');
+            
+            // Clear existing options except the first one
+            while (eventSelect.options.length > 1) {
+                eventSelect.remove(1);
+            }
+            
+            // Add options for each custom event
+            customEvents.forEach(event => {
+                const nameInput = event.querySelector('.event-name-input');
+                if (nameInput && nameInput.value) {
+                    const option = new Option(nameInput.value, nameInput.value);
+                    eventSelect.add(option);
+                }
+            });
+        }
+
+        // Add event listener for event name changes
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('event-name-input')) {
+                updateEventSelectOptions();
+            }
+        });
+
+        // Show event type modal
+        function showEventTypeModal() {
+            document.getElementById('eventTypeModal').style.display = 'block';
+        }
+
+        // Initialize analytics charts
+        window.onload = function() {
+            // Timeline Chart
+            new Chart(document.getElementById('timelineChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Page Views',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        borderColor: '#0366d6'
+                    }, {
+                        label: 'Events',
+                        data: [8000, 12000, 10000, 15000, 14000, 18000],
+                        borderColor: '#28a745'
+                    }]
+                }
+            });
+
+            // Device Types Chart
+            new Chart(document.getElementById('deviceChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Desktop', 'Mobile', 'Tablet'],
+                    datasets: [{
+                        data: [45, 40, 15],
+                        backgroundColor: ['#0366d6', '#28a745', '#f6a434']
+                    }]
+                }
+            });
+
+            // Initialize other charts similarly
+        };
+
+        // Drag and drop functionality
+        document.querySelectorAll('.field-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.textContent);
+            });
+        });
+
+        document.querySelectorAll('.dropzone').forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.style.background = '#e1e4e8';
+            });
+
+            zone.addEventListener('dragleave', (e) => {
+                zone.style.background = '#f6f8fa';
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const data = e.dataTransfer.getData('text/plain');
+                zone.innerHTML = `${zone.getAttribute('data-field')} ← ${data}`;
+                zone.style.background = '#f6f8fa';
+            });
+        });
+    </script>
+</body>
+</html> 
